@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { ReleaseData } from '../types/release'
+import { ReleaseDataResponse } from '../types/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
@@ -15,9 +16,9 @@ export const useReleaseData = () => {
         setLoading(true)
 
         // 서버 API에서 릴리즈 데이터 가져오기
-        const response = await axios.get(`${API_BASE_URL}/releases/data`)
+        const response = await axios.get<ReleaseDataResponse>(`${API_BASE_URL}/releases/data`)
 
-        if (response.data.success) {
+        if (response.data.success && response.data.data) {
           setData(response.data.data)
           setError(null)
         } else {

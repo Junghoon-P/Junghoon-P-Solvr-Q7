@@ -31,3 +31,29 @@ export interface ChartData {
   value?: number
   [key: string]: any
 }
+
+// 릴리즈 통계 타입
+export interface ReleaseStats {
+  totalReleases: number
+  weekdayReleases: number
+  weekendReleases: number
+  prereleases: number
+  hotfixes: number
+  byRepository: {
+    [key: string]: {
+      total: number
+      prereleases: number
+      hotfixes: number
+    }
+  }
+  byTimeSlot: {
+    [key: string]: number
+  }
+  byMonth: {
+    [key: string]: {
+      total: number
+      weekday: number
+      weekend: number
+    }
+  }
+}
