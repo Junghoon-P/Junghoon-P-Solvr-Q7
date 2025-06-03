@@ -24,8 +24,21 @@ interface ReleaseData {
   isDraft: boolean
   year: number
   month: number
+  quarter: number
   week: number
   dayOfWeek: number
+  hour: number
+  timeSlot: string
+  isWeekend: boolean
+  versionType: string
+  releaseType: string
+  isMajorVersion: boolean
+  isPatchVersion: boolean
+  isHotfix: boolean
+  daysSinceEpoch: number
+  monthName: string
+  dayName: string
+  seasonQuarter: string
 }
 
 interface StatData {
@@ -77,6 +90,9 @@ class ReleaseAnalyzer {
       .filter(release => !release.draft)
       .map(release => {
         const publishedAt = new Date(release.published_at)
+        const dayOfWeek = publishedAt.getDay()
+        const hour = publishedAt.getHours()
+
         return {
           repo,
           tagName: release.tag_name,
@@ -87,18 +103,96 @@ class ReleaseAnalyzer {
           isDraft: release.draft,
           year: publishedAt.getFullYear(),
           month: publishedAt.getMonth() + 1,
+          quarter: Math.ceil((publishedAt.getMonth() + 1) / 3),
           week: this.getWeekNumber(publishedAt),
-          dayOfWeek: publishedAt.getDay()
+          dayOfWeek,
+          hour,
+          timeSlot: this.getTimeSlot(hour),
+          isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+          versionType: this.getVersionType(release.tag_name),
+          releaseType: this.getReleaseType(release.tag_name, release.prerelease),
+          isMajorVersion: this.isMajorVersion(release.tag_name),
+          isPatchVersion: this.isPatchVersion(release.tag_name),
+          isHotfix: this.isHotfix(release.tag_name),
+          daysSinceEpoch: Math.floor(publishedAt.getTime() / (1000 * 60 * 60 * 24)),
+          monthName: publishedAt.toLocaleString('en-US', { month: 'long' }),
+          dayName: publishedAt.toLocaleString('en-US', { weekday: 'long' }),
+          seasonQuarter: this.getSeasonQuarter(publishedAt.getMonth() + 1)
         }
       })
       .sort((a, b) => a.publishedAt.getTime() - b.publishedAt.getTime())
   }
 
+  private getTimeSlot(hour: number): string {
+    if (hour < 6) return 'early_morning'
+    if (hour < 9) return 'morning'
+    if (hour < 12) return 'work_morning'
+    if (hour < 14) return 'lunch_time'
+    if (hour < 18) return 'work_afternoon'
+    if (hour < 21) return 'evening'
+    return 'night'
+  }
+
+  private getVersionType(tagName: string): string {
+    if (/v?\d+\.\d+\.\d+/.test(tagName)) return 'semantic'
+    if (/v?\d+\.\d+/.test(tagName)) return 'major_minor'
+    if (/v?\d+/.test(tagName)) return 'major_only'
+    return 'custom'
+  }
+
+  private getReleaseType(tagName: string, isPrerelease: boolean): string {
+    if (isPrerelease) {
+      if (tagName.includes('alpha')) return 'alpha'
+      if (tagName.includes('beta')) return 'beta'
+      if (tagName.includes('rc')) return 'release_candidate'
+      return 'prerelease'
+    }
+    return 'stable'
+  }
+
+  private isMajorVersion(tagName: string): boolean {
+    const match = tagName.match(/v?(\d+)\.(\d+)\.(\d+)/)
+    if (!match) return false
+    const [, major, minor, patch] = match
+    return minor === '0' && patch === '0'
+  }
+
+  private isPatchVersion(tagName: string): boolean {
+    const match = tagName.match(/v?(\d+)\.(\d+)\.(\d+)/)
+    if (!match) return false
+    const [, , minor, patch] = match
+    return patch !== '0'
+  }
+
+  private isHotfix(tagName: string): boolean {
+    return (
+      /hotfix|fix|patch/i.test(tagName) || (tagName.includes('.') && tagName.split('.').length > 3)
+    )
+  }
+
+  private getSeasonQuarter(month: number): string {
+    const seasons = {
+      1: 'Q1_Winter',
+      2: 'Q1_Winter',
+      3: 'Q1_Spring',
+      4: 'Q2_Spring',
+      5: 'Q2_Spring',
+      6: 'Q2_Summer',
+      7: 'Q3_Summer',
+      8: 'Q3_Summer',
+      9: 'Q3_Fall',
+      10: 'Q4_Fall',
+      11: 'Q4_Fall',
+      12: 'Q4_Winter'
+    }
+    return seasons[month as keyof typeof seasons] || 'Q1_Winter'
+  }
+
   private generateStats(allReleases: ReleaseData[]): StatData[] {
     const stats: StatData[] = []
 
-    // 주말 제외 릴리즈 필터링 (토요일=6, 일요일=0)
-    const weekdayReleases = allReleases.filter(r => r.dayOfWeek !== 0 && r.dayOfWeek !== 6)
+    // 주말 제외 릴리즈 필터링
+    const weekdayReleases = allReleases.filter(r => !r.isWeekend)
 
     // 전체 통계
     stats.push({ metric: 'total_releases', value: allReleases.length })
@@ -111,7 +205,7 @@ class ReleaseAnalyzer {
     // 리포지토리별 통계
     const byRepo = this.groupBy(allReleases, 'repo')
     Object.entries(byRepo).forEach(([repo, releases]) => {
-      const weekdayCount = releases.filter(r => r.dayOfWeek !== 0 && r.dayOfWeek !== 6).length
+      const weekdayCount = releases.filter(r => !r.isWeekend).length
       stats.push({
         metric: 'releases_by_repo',
         value: releases.length,
@@ -236,12 +330,71 @@ class ReleaseAnalyzer {
     }
 
     // 주말 제외 릴리즈 데이터 필터링
-    const weekdayReleases = allReleaseData.filter(r => r.dayOfWeek !== 0 && r.dayOfWeek !== 6)
+    const weekdayReleases = allReleaseData.filter(r => !r.isWeekend)
     console.log(
       `📊 전체 릴리즈: ${allReleaseData.length}개, 평일 릴리즈: ${weekdayReleases.length}개`
     )
 
-    // 릴리즈 상세 데이터 저장
+    // 릴리즈 상세 데이터 저장 (대시보드용 확장 컬럼 포함)
+    await this.saveToCSV(
+      allReleaseData.map(r => ({
+        repository: r.repo,
+        tag_name: r.tagName,
+        release_name: r.name,
+        published_at: r.publishedAt.toISOString(),
+        published_date: r.publishedAt.toISOString().split('T')[0],
+        published_time: r.publishedAt.toISOString().split('T')[1].split('.')[0],
+        author: r.author,
+        is_prerelease: r.isPrerelease,
+        year: r.year,
+        month: r.month,
+        quarter: r.quarter,
+        month_name: r.monthName,
+        week_number: r.week,
+        day_of_week: r.dayOfWeek,
+        day_name: r.dayName,
+        hour: r.hour,
+        time_slot: r.timeSlot,
+        is_weekend: r.isWeekend,
+        season_quarter: r.seasonQuarter,
+        version_type: r.versionType,
+        release_type: r.releaseType,
+        is_major_version: r.isMajorVersion,
+        is_patch_version: r.isPatchVersion,
+        is_hotfix: r.isHotfix,
+        days_since_epoch: r.daysSinceEpoch
+      })),
+      'enhanced_release_details.csv',
+      [
+        { id: 'repository', title: 'Repository' },
+        { id: 'tag_name', title: 'Tag Name' },
+        { id: 'release_name', title: 'Release Name' },
+        { id: 'published_at', title: 'Published At (ISO)' },
+        { id: 'published_date', title: 'Published Date' },
+        { id: 'published_time', title: 'Published Time' },
+        { id: 'author', title: 'Author' },
+        { id: 'is_prerelease', title: 'Is Prerelease' },
+        { id: 'year', title: 'Year' },
+        { id: 'month', title: 'Month' },
+        { id: 'quarter', title: 'Quarter' },
+        { id: 'month_name', title: 'Month Name' },
+        { id: 'week_number', title: 'Week Number' },
+        { id: 'day_of_week', title: 'Day of Week (0=Sun)' },
+        { id: 'day_name', title: 'Day Name' },
+        { id: 'hour', title: 'Hour (0-23)' },
+        { id: 'time_slot', title: 'Time Slot' },
+        { id: 'is_weekend', title: 'Is Weekend' },
+        { id: 'season_quarter', title: 'Season Quarter' },
+        { id: 'version_type', title: 'Version Type' },
+        { id: 'release_type', title: 'Release Type' },
+        { id: 'is_major_version', title: 'Is Major Version' },
+        { id: 'is_patch_version', title: 'Is Patch Version' },
+        { id: 'is_hotfix', title: 'Is Hotfix' },
+        { id: 'days_since_epoch', title: 'Days Since Epoch' }
+      ]
+    )
+
+    // 기존 릴리즈 상세 데이터 저장 (하위 호환성)
     await this.saveToCSV(
       allReleaseData.map(r => ({
         repository: r.repo,
@@ -254,7 +407,7 @@ class ReleaseAnalyzer {
         month: r.month,
         week_number: r.week,
         day_of_week: r.dayOfWeek,
-        is_weekend: r.dayOfWeek === 0 || r.dayOfWeek === 6
+        is_weekend: r.isWeekend
       })),
       'release_details.csv',
       [
