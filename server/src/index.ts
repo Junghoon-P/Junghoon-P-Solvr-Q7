@@ -4,6 +4,7 @@ import env from './config/env'
 import { initializeDatabase, getDb } from './db'
 import runMigration from './db/migrate'
 import { createUserService } from './services/userService'
+import { dataService } from './services/dataService'
 import { createRoutes } from './routes'
 import { AppContext } from './types/context'
 
@@ -35,10 +36,15 @@ async function start() {
     await runMigration()
     await initializeDatabase()
 
+    // 🚀 Raw 데이터를 메모리에 로드
+    console.log('📊 릴리즈 데이터를 메모리에 로딩 중...')
+    await dataService.initialize()
+
     // 서비스 및 컨텍스트 초기화
     const db = await getDb()
     const context: AppContext = {
-      userService: createUserService({ db })
+      userService: createUserService({ db }),
+      dataService
     }
 
     // 라우트 등록
@@ -47,7 +53,7 @@ async function start() {
     // 서버 시작
     await fastify.listen({ port: env.PORT, host: env.HOST })
 
-    console.log(`서버가 http://${env.HOST}:${env.PORT} 에서 실행 중입니다.`)
+    console.log(`🚀 서버가 http://${env.HOST}:${env.PORT} 에서 실행 중입니다.`)
   } catch (error) {
     fastify.log.error(error)
     process.exit(1)
