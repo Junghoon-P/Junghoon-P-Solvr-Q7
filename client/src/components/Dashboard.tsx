@@ -35,6 +35,10 @@ export const Dashboard = () => {
     )
   }
 
+  const weekdayPercentage = ((stats.weekdayReleases / stats.totalReleases) * 100).toFixed(1)
+  const prereleasePercentage = ((stats.prereleases / stats.totalReleases) * 100).toFixed(1)
+  const hotfixPercentage = ((stats.hotfixes / stats.totalReleases) * 100).toFixed(1)
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -67,23 +71,17 @@ export const Dashboard = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-sm font-medium text-gray-500">평일 릴리즈</h3>
             <p className="text-3xl font-bold text-green-600">{stats.weekdayReleases}</p>
-            <p className="text-sm text-gray-500">
-              ({((stats.weekdayReleases / stats.totalReleases) * 100).toFixed(1)}%)
-            </p>
+            <p className="text-sm text-gray-500">({weekdayPercentage}%)</p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-sm font-medium text-gray-500">프리릴리즈</h3>
             <p className="text-3xl font-bold text-yellow-600">{stats.prereleases}</p>
-            <p className="text-sm text-gray-500">
-              ({((stats.prereleases / stats.totalReleases) * 100).toFixed(1)}%)
-            </p>
+            <p className="text-sm text-gray-500">({prereleasePercentage}%)</p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-sm font-medium text-gray-500">핫픽스</h3>
             <p className="text-3xl font-bold text-red-600">{stats.hotfixes}</p>
-            <p className="text-sm text-gray-500">
-              ({((stats.hotfixes / stats.totalReleases) * 100).toFixed(1)}%)
-            </p>
+            <p className="text-sm text-gray-500">({hotfixPercentage}%)</p>
           </div>
         </div>
 
