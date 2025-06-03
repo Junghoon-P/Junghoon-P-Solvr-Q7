@@ -1,115 +1,102 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { createSuccessResponse, createErrorResponse } from '../utils/response'
-import * as fs from 'fs'
-import * as path from 'path'
-import Papa from 'papaparse'
+import { AppContext } from '../types/context'
 
-interface ReleaseData {
-  repository: string
-  tag_name: string
-  release_name: string
-  published_at: string
-  published_date: string
-  published_time: string
-  author: string
-  is_prerelease: boolean
-  year: number
-  month: number
-  quarter: number
-  month_name: string
-  week_number: number
-  day_of_week: number
-  day_name: string
-  hour: number
-  time_slot: string
-  is_weekend: boolean
-  season_quarter: string
-  version_type: string
-  release_type: string
-  is_major_version: boolean
-  is_patch_version: boolean
-  is_hotfix: boolean
-  days_since_epoch: number
+interface GetReleaseDataQuery {
+  repository?: string
+  dateFrom?: string
+  dateTo?: string
+  isPrerelease?: string
+  timeSlot?: string
 }
 
 // 릴리즈 데이터 조회 핸들러
-async function getReleaseData(_request: FastifyRequest, reply: FastifyReply) {
-  try {
-    // enhanced_release_details.csv 파일 경로
-    const csvPath = path.join(process.cwd(), 'output', 'enhanced_release_details.csv')
+function createGetReleaseData(context: AppContext) {
+  return async (
+    request: FastifyRequest<{ Querystring: GetReleaseDataQuery }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { repository, dateFrom, dateTo, isPrerelease, timeSlot } = request.query
 
-    // 파일 존재 확인
-    if (!fs.existsSync(csvPath)) {
-      return reply.code(404).send(createErrorResponse('릴리즈 데이터 파일을 찾을 수 없습니다.'))
+      // 필터 옵션이 있으면 필터링된 데이터, 없으면 전체 데이터
+      const data =
+        Object.keys(request.query).length > 0
+          ? context.dataService.getFilteredReleases({
+              repository,
+              dateFrom,
+              dateTo,
+              isPrerelease: isPrerelease ? isPrerelease === 'true' : undefined,
+              timeSlot
+            })
+          : context.dataService.getAllReleases()
+
+      return reply.code(200).send(createSuccessResponse(data))
+    } catch (error) {
+      console.error('Error loading release data:', error)
+      return reply.code(500).send(createErrorResponse('릴리즈 데이터를 불러오는데 실패했습니다.'))
     }
-
-    // CSV 파일 읽기
-    const csvContent = fs.readFileSync(csvPath, 'utf-8')
-
-    // CSV 파싱
-    const parseResult = Papa.parse<ReleaseData>(csvContent, {
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      transform: (value, field) => {
-        // Boolean 필드 변환
-        if (
-          [
-            'is_prerelease',
-            'is_weekend',
-            'is_major_version',
-            'is_patch_version',
-            'is_hotfix'
-          ].includes(field as string)
-        ) {
-          if (typeof value === 'string') {
-            return value === 'true'
-          }
-          return Boolean(value)
-        }
-        return value
-      }
-    })
-
-    if (parseResult.errors.length > 0) {
-      console.warn('CSV parsing warnings:', parseResult.errors)
-    }
-
-    return reply.code(200).send(createSuccessResponse(parseResult.data))
-  } catch (error) {
-    console.error('Error loading release data:', error)
-    return reply.code(500).send(createErrorResponse('릴리즈 데이터를 불러오는데 실패했습니다.'))
   }
 }
 
 // 릴리즈 통계 조회 핸들러
-async function getReleaseStats(_request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const csvPath = path.join(process.cwd(), 'output', 'release_statistics.csv')
-
-    if (!fs.existsSync(csvPath)) {
-      return reply.code(404).send(createErrorResponse('릴리즈 통계 파일을 찾을 수 없습니다.'))
+function createGetReleaseStats(context: AppContext) {
+  return async (_request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const stats = context.dataService.getStats()
+      return reply.code(200).send(createSuccessResponse(stats))
+    } catch (error) {
+      console.error('Error loading release stats:', error)
+      return reply.code(500).send(createErrorResponse('릴리즈 통계를 불러오는데 실패했습니다.'))
     }
+  }
+}
 
-    const csvContent = fs.readFileSync(csvPath, 'utf-8')
-    const parseResult = Papa.parse(csvContent, {
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true
-    })
+// 차트 데이터 조회 핸들러
+function createGetChartData(context: AppContext) {
+  return async (_request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const chartData = context.dataService.getChartData()
+      return reply.code(200).send(createSuccessResponse(chartData))
+    } catch (error) {
+      console.error('Error loading chart data:', error)
+      return reply.code(500).send(createErrorResponse('차트 데이터를 불러오는데 실패했습니다.'))
+    }
+  }
+}
 
-    return reply.code(200).send(createSuccessResponse(parseResult.data))
-  } catch (error) {
-    console.error('Error loading release stats:', error)
-    return reply.code(500).send(createErrorResponse('릴리즈 통계를 불러오는데 실패했습니다.'))
+// 데이터 새로고침 핸들러
+function createRefreshData(context: AppContext) {
+  return async (_request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      await context.dataService.refresh()
+      const stats = context.dataService.getStats()
+      return reply.code(200).send(
+        createSuccessResponse({
+          message: '데이터가 성공적으로 새로고침되었습니다.',
+          stats
+        })
+      )
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+      return reply.code(500).send(createErrorResponse('데이터 새로고침에 실패했습니다.'))
+    }
   }
 }
 
 // 릴리즈 라우트 등록
-export default async function releaseRoutes(fastify: FastifyInstance) {
-  // 릴리즈 데이터 조회
-  fastify.get('/data', getReleaseData)
+export default function createReleaseRoutes(context: AppContext) {
+  return async (fastify: FastifyInstance) => {
+    // 릴리즈 데이터 조회 (필터링 지원)
+    fastify.get('/data', createGetReleaseData(context))
 
-  // 릴리즈 통계 조회
-  fastify.get('/stats', getReleaseStats)
+    // 릴리즈 통계 조회 (메모리 기반)
+    fastify.get('/stats', createGetReleaseStats(context))
+
+    // 차트용 가공된 데이터 조회
+    fastify.get('/charts', createGetChartData(context))
+
+    // 데이터 새로고침
+    fastify.post('/refresh', createRefreshData(context))
+  }
 }

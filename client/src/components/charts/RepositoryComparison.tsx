@@ -8,86 +8,33 @@ import {
   XAxis,
   YAxis
 } from 'recharts'
-import { ChartData, ReleaseData } from '../../types/release'
+import { ChartContainer } from './ChartContainer'
+import { CHART_COLORS, CHART_CONFIG } from '../../utils/chartUtils'
+import { RepositoryProps } from '../../types/chart'
 
-interface Props {
-  data: ReleaseData[]
-}
-
-export const RepositoryComparison = ({ data }: Props) => {
-  const processData = (data: ReleaseData[]): ChartData[] => {
-    const repoStats = data.reduce(
-      (acc, release) => {
-        const repo = release['Repository']
-
-        if (!acc[repo]) {
-          acc[repo] = {
-            total: 0,
-            major: 0,
-            patch: 0,
-            prerelease: 0,
-            hotfix: 0
-          }
-        }
-
-        acc[repo].total++
-        if (release['Is Major Version']) acc[repo].major++
-        if (release['Is Patch Version']) acc[repo].patch++
-        if (release['Is Prerelease']) acc[repo].prerelease++
-        if (release['Is Hotfix']) acc[repo].hotfix++
-
-        return acc
-      },
-      {} as Record<string, any>
-    )
-
-    return Object.entries(repoStats).map(([name, stats]) => ({
-      name: name.split('/')[1] || name, // 짧은 이름 사용
-      ...stats
-    }))
-  }
-
-  const chartData = processData(data)
+export const RepositoryComparison = ({ data }: RepositoryProps) => {
+  // 서버에서 받은 데이터를 차트 형식으로 변환
+  const chartData = data.map(item => ({
+    name: item.repository,
+    releases: item.count,
+    percentage: item.percentage
+  }))
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h3 className="text-lg font-semibold mb-4">리포지토리별 릴리즈 비교</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip
-            formatter={(value: number, name: string) => {
-              const labels: Record<string, string> = {
-                total: '총 릴리즈',
-                major: '메이저 버전',
-                patch: '패치 버전',
-                prerelease: '프리릴리즈',
-                hotfix: '핫픽스'
-              }
-              return [value, labels[name] || name]
-            }}
-          />
-          <Legend
-            formatter={(value: string) => {
-              const labels: Record<string, string> = {
-                total: '총 릴리즈',
-                major: '메이저 버전',
-                patch: '패치 버전',
-                prerelease: '프리릴리즈',
-                hotfix: '핫픽스'
-              }
-              return labels[value] || value
-            }}
-          />
-          <Bar dataKey="total" fill="#8884d8" />
-          <Bar dataKey="major" fill="#82ca9d" />
-          <Bar dataKey="patch" fill="#ffc658" />
-          <Bar dataKey="prerelease" fill="#ff7300" />
-          <Bar dataKey="hotfix" fill="#ff0000" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <ChartContainer title="리포지토리별 릴리즈 비교">
+      <BarChart data={chartData} margin={CHART_CONFIG.MARGIN}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip
+          formatter={(value: number, name: string) => [
+            name === 'releases' ? `${value}개` : `${value}%`,
+            name === 'releases' ? '릴리즈 수' : '비율'
+          ]}
+        />
+        <Legend formatter={(value: string) => (value === 'releases' ? '릴리즈 수' : '비율')} />
+        <Bar dataKey="releases" fill={CHART_COLORS.PRIMARY} />
+      </BarChart>
+    </ChartContainer>
   )
 }

@@ -16,7 +16,7 @@ const HomePage = () => {
           유저 관리 시작하기
         </Link>
         <a
-          href="https://github.com/yourusername/fullstack-boilerplate"
+          href="https://github.com/Junghoon-P/Junghoon-P-Solvr-Q7"
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-outline"
