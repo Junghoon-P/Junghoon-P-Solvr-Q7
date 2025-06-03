@@ -1,6 +1,5 @@
-import React from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
-import { ReleaseData, ChartData } from '../../types/release'
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import { ChartData, ReleaseData } from '../../types/release'
 
 interface Props {
   data: ReleaseData[]

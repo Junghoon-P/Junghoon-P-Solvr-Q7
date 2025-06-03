@@ -1,15 +1,14 @@
-import React from 'react'
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
+  Legend,
   ResponsiveContainer,
-  Legend
+  Tooltip,
+  XAxis,
+  YAxis
 } from 'recharts'
-import { ReleaseData, ChartData } from '../../types/release'
+import { ChartData, ReleaseData } from '../../types/release'
 
 interface Props {
   data: ReleaseData[]

@@ -1,15 +1,13 @@
-import React from 'react'
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
   CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
   Tooltip,
-  Legend,
-  ResponsiveContainer
+  XAxis,
+  YAxis
 } from 'recharts'
-import { ReleaseData, ChartData } from '../../types/release'
+import { ChartData, ReleaseData } from '../../types/release'
 
 interface Props {
   data: ReleaseData[]
