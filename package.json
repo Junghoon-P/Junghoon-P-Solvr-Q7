@@ -1,7 +1,7 @@
 {
   "name": "fullstack-boilerplate",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fullstack boilerplate for engineering interviews",
   "scripts": {
     "dev": "concurrently \"pnpm dev:client\" \"pnpm dev:server\"",
