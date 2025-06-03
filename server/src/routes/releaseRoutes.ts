@@ -52,6 +52,19 @@ function createGetReleaseStats(context: AppContext) {
   }
 }
 
+// 차트 데이터 조회 핸들러
+function createGetChartData(context: AppContext) {
+  return async (_request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const chartData = context.dataService.getChartData()
+      return reply.code(200).send(createSuccessResponse(chartData))
+    } catch (error) {
+      console.error('Error loading chart data:', error)
+      return reply.code(500).send(createErrorResponse('차트 데이터를 불러오는데 실패했습니다.'))
+    }
+  }
+}
+
 // 데이터 새로고침 핸들러
 function createRefreshData(context: AppContext) {
   return async (_request: FastifyRequest, reply: FastifyReply) => {
@@ -79,6 +92,9 @@ export default function createReleaseRoutes(context: AppContext) {
 
     // 릴리즈 통계 조회 (메모리 기반)
     fastify.get('/stats', createGetReleaseStats(context))
+
+    // 차트용 가공된 데이터 조회
+    fastify.get('/charts', createGetChartData(context))
 
     // 데이터 새로고침
     fastify.post('/refresh', createRefreshData(context))

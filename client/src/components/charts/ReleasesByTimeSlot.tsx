@@ -1,38 +1,34 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { ReleaseData } from '../../types/release'
+
+interface TimeSlotData {
+  timeSlot: string
+  count: number
+  percentage: number
+}
 
 interface Props {
-  data: ReleaseData[]
+  data: TimeSlotData[]
 }
 
 export const ReleasesByTimeSlot = ({ data }: Props) => {
-  const chartData = data.reduce(
-    (acc, release) => {
-      const existing = acc.find(item => item.time_slot === release['Time Slot'])
-      if (existing) {
-        existing.count++
-      } else {
-        acc.push({
-          time_slot: release['Time Slot'],
-          count: 1,
-          name: release['Time Slot'].replace('_', ' ').toUpperCase()
-        })
-      }
-      return acc
-    },
-    [] as { time_slot: string; count: number; name: string }[]
-  )
+  // 서버에서 받은 데이터를 차트 형식으로 변환
+  const chartData = data.map(item => ({
+    name: item.timeSlot.replace('_', ' ').toUpperCase(),
+    count: item.count,
+    percentage: item.percentage
+  }))
+
   // 시간순으로 정렬
   const timeOrder = [
-    'early_morning',
-    'morning',
-    'work_morning',
-    'lunch_time',
-    'work_afternoon',
-    'evening',
-    'night'
+    'EARLY MORNING',
+    'MORNING',
+    'WORK MORNING',
+    'LUNCH TIME',
+    'WORK AFTERNOON',
+    'EVENING',
+    'NIGHT'
   ]
-  chartData.sort((a, b) => timeOrder.indexOf(a.time_slot) - timeOrder.indexOf(b.time_slot))
+  chartData.sort((a, b) => timeOrder.indexOf(a.name) - timeOrder.indexOf(b.name))
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -43,7 +39,10 @@ export const ReleasesByTimeSlot = ({ data }: Props) => {
           <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
           <YAxis />
           <Tooltip
-            formatter={(value: number) => [value, '릴리즈 수']}
+            formatter={(value: number, name: string) => [
+              name === 'count' ? `${value}개` : `${value}%`,
+              name === 'count' ? '릴리즈 수' : '비율'
+            ]}
             labelStyle={{ color: '#333' }}
           />
           <Bar dataKey="count" fill="#8884d8" />

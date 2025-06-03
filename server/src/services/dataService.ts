@@ -41,6 +41,13 @@ export interface DashboardStats {
   byReleaseType: Record<string, number>
 }
 
+export interface ChartData {
+  monthlyTrend: Array<{ month: string; count: number; year: number }>
+  timeSlotDistribution: Array<{ timeSlot: string; count: number; percentage: number }>
+  releaseTypeDistribution: Array<{ type: string; count: number; percentage: number }>
+  repositoryComparison: Array<{ repository: string; count: number; percentage: number }>
+}
+
 export class DataService {
   private releaseData: ReleaseData[] = []
   private stats: DashboardStats | null = null
@@ -203,6 +210,65 @@ export class DataService {
     this.releaseData = []
     this.stats = null
     await this.initialize()
+  }
+
+  // 차트용 가공된 데이터 반환
+  getChartData(): ChartData {
+    if (!this.isLoaded) {
+      throw new Error('데이터 서비스가 초기화되지 않았습니다')
+    }
+
+    const data = this.releaseData
+    const totalCount = data.length
+
+    // 월별 트렌드 데이터
+    const monthlyData: Record<string, { count: number; year: number }> = {}
+    data.forEach(r => {
+      const key = `${r.Year}-${r.Month.toString().padStart(2, '0')}`
+      if (!monthlyData[key]) {
+        monthlyData[key] = { count: 0, year: r.Year }
+      }
+      monthlyData[key].count++
+    })
+
+    const monthlyTrend = Object.entries(monthlyData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => ({
+        month: month.split('-')[1] + '월',
+        count: data.count,
+        year: data.year
+      }))
+
+    // 시간대별 분포
+    const timeSlotData = this.stats!.byTimeSlot
+    const timeSlotDistribution = Object.entries(timeSlotData).map(([timeSlot, count]) => ({
+      timeSlot,
+      count,
+      percentage: Math.round((count / totalCount) * 100)
+    }))
+
+    // 릴리즈 타입별 분포
+    const releaseTypeData = this.stats!.byReleaseType
+    const releaseTypeDistribution = Object.entries(releaseTypeData).map(([type, count]) => ({
+      type,
+      count,
+      percentage: Math.round((count / totalCount) * 100)
+    }))
+
+    // 저장소별 비교
+    const repositoryData = this.stats!.byRepository
+    const repositoryComparison = Object.entries(repositoryData).map(([repository, count]) => ({
+      repository: repository.replace('daangn/', ''),
+      count,
+      percentage: Math.round((count / totalCount) * 100)
+    }))
+
+    return {
+      monthlyTrend,
+      timeSlotDistribution,
+      releaseTypeDistribution,
+      repositoryComparison
+    }
   }
 }
 
