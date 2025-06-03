@@ -1,0 +1,31 @@
+{
+  "name": "fullstack-boilerplate",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Fullstack boilerplate for engineering interviews",
+  "scripts": {
+    "dev": "concurrently \"pnpm dev:client\" \"pnpm dev:server\"",
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev",
+    "build": "pnpm --filter client build && pnpm --filter server build",
+    "test": "pnpm test:client && pnpm test:server",
+    "test:client": "pnpm --filter client test",
+    "test:server": "pnpm --filter server test",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
+  },
+  "keywords": [
+    "fullstack",
+    "react",
+    "fastify",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prettier": "^3.5.3"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
