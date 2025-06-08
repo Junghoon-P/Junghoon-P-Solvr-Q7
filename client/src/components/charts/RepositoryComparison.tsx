@@ -1,16 +1,7 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from 'recharts'
-import { ChartContainer } from './ChartContainer'
-import { CHART_COLORS, CHART_CONFIG } from '../../utils/chartUtils'
+import { Bar, BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from 'recharts'
 import { RepositoryProps } from '../../types/chart'
+import { CHART_COLORS, CHART_CONFIG } from '../../utils/chartUtils'
+import { ChartContainer } from './ChartContainer'
 
 export const RepositoryComparison = ({ data }: RepositoryProps) => {
   // 서버에서 받은 데이터를 차트 형식으로 변환

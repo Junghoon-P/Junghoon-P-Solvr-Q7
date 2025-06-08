@@ -1,15 +1,7 @@
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from 'recharts'
-import { ChartContainer } from './ChartContainer'
-import { CHART_COLORS, CHART_CONFIG } from '../../utils/chartUtils'
+import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { MonthlyTrendProps } from '../../types/chart'
+import { CHART_COLORS, CHART_CONFIG } from '../../utils/chartUtils'
+import { ChartContainer } from './ChartContainer'
 
 export const ReleaseTrendByMonth = ({ data }: MonthlyTrendProps) => {
   // 서버에서 받은 데이터를 차트 형식으로 변환

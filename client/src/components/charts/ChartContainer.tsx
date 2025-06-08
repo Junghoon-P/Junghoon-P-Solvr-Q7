@@ -2,7 +2,7 @@ import { ResponsiveContainer } from 'recharts'
 
 interface ChartContainerProps {
   title: string
-  children: React.ReactNode
+  children: React.ReactElement
   className?: string
   height?: number
 }

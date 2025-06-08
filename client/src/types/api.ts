@@ -1,4 +1,4 @@
-import { ReleaseData } from './release'
+import { ReleaseData, ReleaseStats } from './release'
 
 // API 응답 타입
 export interface ApiResponse<T = any> {
