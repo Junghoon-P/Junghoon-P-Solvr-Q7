@@ -5,6 +5,7 @@ import { ReleaseTrendByMonth } from './charts/ReleaseTrendByMonth'
 import { ReleaseTypeDistribution } from './charts/ReleaseTypeDistribution'
 import { RepositoryComparison } from './charts/RepositoryComparison'
 import { LoadingSpinner, ErrorMessage } from './common'
+import { MESSAGES } from '../constants'
 
 export const Dashboard = memo(() => {
   const { stats, chartData, loading, error, refresh } = useDashboardData()
@@ -23,7 +24,7 @@ export const Dashboard = memo(() => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <LoadingSpinner message="대시보드 데이터를 로딩 중..." className="min-h-screen" />
+        <LoadingSpinner message={MESSAGES.LOADING.DASHBOARD} className="min-h-screen" />
       </div>
     )
   }
@@ -33,7 +34,7 @@ export const Dashboard = memo(() => {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <ErrorMessage
           title="데이터 로딩 오류"
-          message={error || '데이터를 불러올 수 없습니다.'}
+          message={error || MESSAGES.ERROR.DATA_FETCH_FAILED}
           onRetry={refresh}
           className="bg-white shadow-lg"
         />

@@ -1,11 +1,12 @@
 import { memo } from 'react'
+import { UI_CONFIG } from '../../constants'
 
 interface ErrorMessageProps {
   title?: string
   message: string
   onRetry?: () => void
   className?: string
-  variant?: 'error' | 'warning' | 'info'
+  variant?: keyof typeof UI_CONFIG.ERROR_VARIANT_CLASSES
 }
 
 export const ErrorMessage = memo(
@@ -16,11 +17,7 @@ export const ErrorMessage = memo(
     className = '',
     variant = 'error'
   }: ErrorMessageProps) => {
-    const variantClasses = {
-      error: 'bg-red-50 border-red-200 text-red-800',
-      warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-      info: 'bg-blue-50 border-blue-200 text-blue-800'
-    }
+    const variantClasses = UI_CONFIG.ERROR_VARIANT_CLASSES
 
     return (
       <div className={`border rounded-lg p-6 text-center ${variantClasses[variant]} ${className}`}>

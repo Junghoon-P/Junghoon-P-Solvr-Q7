@@ -1,18 +1,15 @@
 import { memo } from 'react'
+import { UI_CONFIG, MESSAGES } from '../../constants'
 
 interface LoadingSpinnerProps {
   message?: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: keyof typeof UI_CONFIG.LOADING_SPINNER.SIZE_CLASSES
   className?: string
 }
 
 export const LoadingSpinner = memo(
-  ({ message = '로딩 중...', size = 'md', className = '' }: LoadingSpinnerProps) => {
-    const sizeClasses = {
-      sm: 'h-8 w-8',
-      md: 'h-32 w-32',
-      lg: 'h-48 w-48'
-    }
+  ({ message = MESSAGES.LOADING.DEFAULT, size = 'md', className = '' }: LoadingSpinnerProps) => {
+    const sizeClasses = UI_CONFIG.LOADING_SPINNER.SIZE_CLASSES
 
     return (
       <div className={`flex items-center justify-center ${className}`}>
