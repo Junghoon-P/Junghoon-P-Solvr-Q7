@@ -1,7 +1,15 @@
 import { BaseEntity } from './index'
 
+// 사용자 역할 enum
+export enum UserRole {
+  ADMIN = 'admin',
+  USER = 'user',
+  GUEST = 'guest'
+}
+
 // 사용자 기본 타입
 export interface User extends BaseEntity {
+  name: string
   username: string
   email: string
   displayName?: string
@@ -11,8 +19,19 @@ export interface User extends BaseEntity {
   lastLoginAt?: string
 }
 
-// 사용자 역할 타입
-export type UserRole = 'admin' | 'user' | 'viewer'
+// 사용자 생성 DTO 타입
+export interface CreateUserDto {
+  name: string
+  email: string
+  role: UserRole
+}
+
+// 사용자 업데이트 DTO 타입
+export interface UpdateUserDto {
+  name?: string
+  email?: string
+  role?: UserRole
+}
 
 // 사용자 생성 요청 타입
 export interface CreateUserRequest {

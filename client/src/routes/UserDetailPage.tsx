@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { userService } from '../services/api'
 import { User } from '../types/user'
+import { UserRole } from '../types/user'
 
 const UserDetailPage = () => {
   const { id } = useParams<{ id: string }>()
@@ -31,18 +32,14 @@ const UserDetailPage = () => {
   }, [id])
 
   const handleDelete = async () => {
-    if (!user) return
-
-    if (!window.confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
-      return
-    }
+    if (!user || !window.confirm('사용자를 삭제하시겠습니까?')) return
 
     try {
-      await userService.delete(user.id)
+      await userService.delete(Number(user.id))
       navigate('/users')
     } catch (err) {
       console.error('Failed to delete user:', err)
-      alert('사용자 삭제에 실패했습니다.')
+      setError('사용자 삭제에 실패했습니다.')
     }
   }
 
@@ -102,9 +99,9 @@ const UserDetailPage = () => {
               <p className="mt-1">
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
-                    user.role === 'ADMIN'
+                    user.role === UserRole.ADMIN
                       ? 'bg-purple-100 text-purple-800'
-                      : user.role === 'USER'
+                      : user.role === UserRole.USER
                         ? 'bg-primary-100 text-primary-800'
                         : 'bg-neutral-100 text-neutral-800'
                   }`}
@@ -122,7 +119,7 @@ const UserDetailPage = () => {
             <div>
               <h2 className="text-sm font-medium text-neutral-500">수정일</h2>
               <p className="mt-1 text-lg text-neutral-900">
-                {new Date(user.updatedAt).toLocaleDateString()}
+                {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : '-'}
               </p>
             </div>
           </div>

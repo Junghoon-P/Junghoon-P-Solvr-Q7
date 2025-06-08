@@ -1,5 +1,4 @@
 import { ReleaseData, ReleaseStats } from './release'
-import { BaseEntity } from './index'
 
 // 공통 API 응답 타입
 export interface ApiResponse<T = any> {

@@ -31,10 +31,12 @@ export const MESSAGES = {
   },
   ERROR: {
     DEFAULT: '오류가 발생했습니다.',
+    NETWORK: '네트워크 연결을 확인해주세요.',
     NETWORK_ERROR: '네트워크 연결을 확인해주세요.',
     DATA_FETCH_FAILED: '데이터를 불러오는데 실패했습니다.',
     REFRESH_FAILED: '데이터 새로고침에 실패했습니다.',
-    API_ERROR: 'API 요청이 실패했습니다.'
+    API_ERROR: 'API 요청이 실패했습니다.',
+    API_FAILED: 'API 요청이 실패했습니다.'
   },
   CONFIRM: {
     DELETE_USER: '사용자를 삭제하시겠습니까?'
