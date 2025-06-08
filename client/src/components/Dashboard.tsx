@@ -1,11 +1,32 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, Suspense, lazy } from 'react'
 import { useDashboardData } from '../hooks/useDashboardData'
-import { ReleasesByTimeSlot } from './charts/ReleasesByTimeSlot'
-import { ReleaseTrendByMonth } from './charts/ReleaseTrendByMonth'
-import { ReleaseTypeDistribution } from './charts/ReleaseTypeDistribution'
-import { RepositoryComparison } from './charts/RepositoryComparison'
 import { LoadingSpinner, ErrorMessage } from './common'
 import { MESSAGES } from '../constants'
+
+// 차트 컴포넌트들을 lazy loading으로 변경
+const ReleasesByTimeSlot = lazy(() =>
+  import('./charts/ReleasesByTimeSlot').then(module => ({ default: module.ReleasesByTimeSlot }))
+)
+const ReleaseTrendByMonth = lazy(() =>
+  import('./charts/ReleaseTrendByMonth').then(module => ({ default: module.ReleaseTrendByMonth }))
+)
+const ReleaseTypeDistribution = lazy(() =>
+  import('./charts/ReleaseTypeDistribution').then(module => ({
+    default: module.ReleaseTypeDistribution
+  }))
+)
+const RepositoryComparison = lazy(() =>
+  import('./charts/RepositoryComparison').then(module => ({ default: module.RepositoryComparison }))
+)
+
+// 차트 로딩 스피너 컴포넌트
+const ChartLoadingSpinner = memo(() => (
+  <div className="bg-white p-6 rounded-lg shadow-lg">
+    <LoadingSpinner size="sm" message="차트를 불러오는 중..." />
+  </div>
+))
+
+ChartLoadingSpinner.displayName = 'ChartLoadingSpinner'
 
 export const Dashboard = memo(() => {
   const { stats, chartData, loading, error, refresh } = useDashboardData()
@@ -90,10 +111,18 @@ export const Dashboard = memo(() => {
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ReleaseTrendByMonth data={chartData.monthlyTrend} />
-          <ReleasesByTimeSlot data={chartData.timeSlotDistribution} />
-          <ReleaseTypeDistribution data={chartData.releaseTypeDistribution} />
-          <RepositoryComparison data={chartData.repositoryComparison} />
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <ReleaseTrendByMonth data={chartData.monthlyTrend} />
+          </Suspense>
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <ReleasesByTimeSlot data={chartData.timeSlotDistribution} />
+          </Suspense>
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <ReleaseTypeDistribution data={chartData.releaseTypeDistribution} />
+          </Suspense>
+          <Suspense fallback={<ChartLoadingSpinner />}>
+            <RepositoryComparison data={chartData.repositoryComparison} />
+          </Suspense>
         </div>
 
         {/* Footer */}
