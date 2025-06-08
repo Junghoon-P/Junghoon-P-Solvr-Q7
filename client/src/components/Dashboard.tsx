@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { ReleasesByTimeSlot } from './charts/ReleasesByTimeSlot'
 import { ReleaseTrendByMonth } from './charts/ReleaseTrendByMonth'
@@ -9,6 +9,17 @@ import { LoadingSpinner, ErrorMessage } from './common'
 export const Dashboard = memo(() => {
   const { stats, chartData, loading, error, refresh } = useDashboardData()
 
+  // 퍼센티지 계산을 useMemo로 최적화
+  const percentages = useMemo(() => {
+    if (!stats) return null
+
+    return {
+      weekday: ((stats.weekdayReleases / stats.totalReleases) * 100).toFixed(1),
+      prerelease: ((stats.prereleases / stats.totalReleases) * 100).toFixed(1),
+      hotfix: ((stats.hotfixes / stats.totalReleases) * 100).toFixed(1)
+    }
+  }, [stats])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
@@ -17,7 +28,7 @@ export const Dashboard = memo(() => {
     )
   }
 
-  if (error || !stats || !chartData) {
+  if (error || !stats || !chartData || !percentages) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <ErrorMessage
@@ -29,10 +40,6 @@ export const Dashboard = memo(() => {
       </div>
     )
   }
-
-  const weekdayPercentage = ((stats.weekdayReleases / stats.totalReleases) * 100).toFixed(1)
-  const prereleasePercentage = ((stats.prereleases / stats.totalReleases) * 100).toFixed(1)
-  const hotfixPercentage = ((stats.hotfixes / stats.totalReleases) * 100).toFixed(1)
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -66,17 +73,17 @@ export const Dashboard = memo(() => {
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-sm font-medium text-gray-500">평일 릴리즈</h3>
             <p className="text-3xl font-bold text-green-600">{stats.weekdayReleases}</p>
-            <p className="text-sm text-gray-500">({weekdayPercentage}%)</p>
+            <p className="text-sm text-gray-500">({percentages.weekday}%)</p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-sm font-medium text-gray-500">프리릴리즈</h3>
             <p className="text-3xl font-bold text-yellow-600">{stats.prereleases}</p>
-            <p className="text-sm text-gray-500">({prereleasePercentage}%)</p>
+            <p className="text-sm text-gray-500">({percentages.prerelease}%)</p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-sm font-medium text-gray-500">핫픽스</h3>
             <p className="text-3xl font-bold text-red-600">{stats.hotfixes}</p>
-            <p className="text-sm text-gray-500">({hotfixPercentage}%)</p>
+            <p className="text-sm text-gray-500">({percentages.hotfix}%)</p>
           </div>
         </div>
 

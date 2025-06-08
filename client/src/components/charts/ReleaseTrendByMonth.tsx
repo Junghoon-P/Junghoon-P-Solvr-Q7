@@ -1,15 +1,19 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts'
 import { MonthlyTrendProps } from '../../types/chart'
 import { CHART_COLORS, CHART_CONFIG } from '../../utils/chartUtils'
 import { ChartContainer } from './ChartContainer'
 
 export const ReleaseTrendByMonth = memo(({ data }: MonthlyTrendProps) => {
-  // 서버에서 받은 데이터를 차트 형식으로 변환
-  const chartData = data.map(item => ({
-    name: `${item.month} ${item.year}`,
-    totalReleases: item.count
-  }))
+  // 서버에서 받은 데이터를 차트 형식으로 변환 (메모화)
+  const chartData = useMemo(
+    () =>
+      data.map(item => ({
+        name: `${item.month} ${item.year}`,
+        totalReleases: item.count
+      })),
+    [data]
+  )
 
   return (
     <ChartContainer title="월별 릴리즈 트렌드">
