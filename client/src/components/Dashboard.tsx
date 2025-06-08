@@ -1,19 +1,18 @@
+import { memo } from 'react'
 import { useDashboardData } from '../hooks/useDashboardData'
 import { ReleasesByTimeSlot } from './charts/ReleasesByTimeSlot'
 import { ReleaseTrendByMonth } from './charts/ReleaseTrendByMonth'
 import { ReleaseTypeDistribution } from './charts/ReleaseTypeDistribution'
 import { RepositoryComparison } from './charts/RepositoryComparison'
+import { LoadingSpinner, ErrorMessage } from './common'
 
-export const Dashboard = () => {
+export const Dashboard = memo(() => {
   const { stats, chartData, loading, error, refresh } = useDashboardData()
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">대시보드 데이터를 로딩 중...</p>
-        </div>
+      <div className="min-h-screen bg-gray-100">
+        <LoadingSpinner message="대시보드 데이터를 로딩 중..." className="min-h-screen" />
       </div>
     )
   }
@@ -21,16 +20,12 @@ export const Dashboard = () => {
   if (error || !stats || !chartData) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center bg-white p-8 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">데이터 로딩 오류</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={refresh}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            다시 시도
-          </button>
-        </div>
+        <ErrorMessage
+          title="데이터 로딩 오류"
+          message={error || '데이터를 불러올 수 없습니다.'}
+          onRetry={refresh}
+          className="bg-white shadow-lg"
+        />
       </div>
     )
   }
@@ -100,4 +95,6 @@ export const Dashboard = () => {
       </div>
     </div>
   )
-}
+})
+
+Dashboard.displayName = 'Dashboard'

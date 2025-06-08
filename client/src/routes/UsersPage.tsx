@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { userService } from '../services/api'
 import { User } from '../types/user'
+import { LoadingSpinner, ErrorMessage } from '../components/common'
 
 const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([])
@@ -41,19 +42,11 @@ const UsersPage = () => {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-neutral-600">로딩 중...</div>
-      </div>
-    )
+    return <LoadingSpinner size="sm" className="h-64" />
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-6">
-        <p>{error}</p>
-      </div>
-    )
+    return <ErrorMessage message={error} variant="error" />
   }
 
   return (
