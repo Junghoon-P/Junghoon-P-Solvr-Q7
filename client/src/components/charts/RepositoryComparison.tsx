@@ -1,9 +1,10 @@
+import { memo } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from 'recharts'
 import { RepositoryProps } from '../../types/chart'
 import { CHART_COLORS, CHART_CONFIG } from '../../utils/chartUtils'
 import { ChartContainer } from './ChartContainer'
 
-export const RepositoryComparison = ({ data }: RepositoryProps) => {
+export const RepositoryComparison = memo(({ data }: RepositoryProps) => {
   // 서버에서 받은 데이터를 차트 형식으로 변환
   const chartData = data.map(item => ({
     name: item.repository,
@@ -28,4 +29,6 @@ export const RepositoryComparison = ({ data }: RepositoryProps) => {
       </BarChart>
     </ChartContainer>
   )
-}
+})
+
+RepositoryComparison.displayName = 'RepositoryComparison'
