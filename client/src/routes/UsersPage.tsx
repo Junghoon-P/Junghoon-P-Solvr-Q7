@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { userService } from '../services/api'
-import { User } from '../types/user'
+import { User, UserRole } from '../types/user'
+import { LoadingSpinner, ErrorMessage } from '../components/common'
 
 const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([])
@@ -26,14 +27,14 @@ const UsersPage = () => {
     fetchUsers()
   }, [])
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string | number) => {
     if (!window.confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
       return
     }
 
     try {
-      await userService.delete(id)
-      setUsers(users.filter(user => user.id !== id))
+      await userService.delete(Number(id))
+      setUsers(users.filter(user => user.id !== String(id)))
     } catch (err) {
       console.error('Failed to delete user:', err)
       alert('사용자 삭제에 실패했습니다.')
@@ -41,19 +42,11 @@ const UsersPage = () => {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-neutral-600">로딩 중...</div>
-      </div>
-    )
+    return <LoadingSpinner size="sm" className="h-64" />
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-6">
-        <p>{error}</p>
-      </div>
-    )
+    return <ErrorMessage message={error} variant="error" />
   }
 
   return (
@@ -106,9 +99,9 @@ const UsersPage = () => {
                   <td className="py-4 px-4 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
-                        user.role === 'ADMIN'
+                        user.role === UserRole.ADMIN
                           ? 'bg-purple-100 text-purple-800'
-                          : user.role === 'USER'
+                          : user.role === UserRole.USER
                             ? 'bg-primary-100 text-primary-800'
                             : 'bg-neutral-100 text-neutral-800'
                       }`}

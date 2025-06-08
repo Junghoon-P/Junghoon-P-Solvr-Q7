@@ -1,16 +1,21 @@
+import { memo, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { ChartContainer } from './ChartContainer'
 import { CHART_COLORS, CHART_CONFIG, formatTimeSlot, sortByTimeSlot } from '../../utils/chartUtils'
 import { TimeSlotProps } from '../../types/chart'
 
-export const ReleasesByTimeSlot = ({ data }: TimeSlotProps) => {
-  // 서버에서 받은 데이터를 차트 형식으로 변환하고 정렬
-  const chartData = sortByTimeSlot(
-    data.map(item => ({
-      name: formatTimeSlot(item.timeSlot),
-      count: item.count,
-      percentage: item.percentage
-    }))
+export const ReleasesByTimeSlot = memo(({ data }: TimeSlotProps) => {
+  // 서버에서 받은 데이터를 차트 형식으로 변환하고 정렬 (메모화)
+  const chartData = useMemo(
+    () =>
+      sortByTimeSlot(
+        data.map(item => ({
+          name: formatTimeSlot(item.timeSlot),
+          count: item.count,
+          percentage: item.percentage
+        }))
+      ),
+    [data]
   )
 
   return (
@@ -36,4 +41,6 @@ export const ReleasesByTimeSlot = ({ data }: TimeSlotProps) => {
       </BarChart>
     </ChartContainer>
   )
-}
+})
+
+ReleasesByTimeSlot.displayName = 'ReleasesByTimeSlot'

@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { DashboardStats, ChartData, StatsResponse, ChartDataResponse } from '../types/api'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { DashboardStats, ChartData } from '../types/api'
+import { releaseService } from '../services/api'
+import { MESSAGES } from '../constants'
 
 interface DashboardDataState {
   stats: DashboardStats | null
@@ -19,83 +18,78 @@ export const useDashboardData = () => {
     error: null
   })
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }))
+  // API 호출 함수들을 useCallback으로 메모화
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }))
 
-        // 병렬로 통계와 차트 데이터 요청
-        const [statsResponse, chartResponse] = await Promise.all([
-          axios.get<StatsResponse>(`${API_BASE_URL}/releases/stats`),
-          axios.get<ChartDataResponse>(`${API_BASE_URL}/releases/charts`)
-        ])
+      // 병렬로 통계와 차트 데이터 요청
+      const [stats, chartData] = await Promise.all([
+        releaseService.getStats<DashboardStats>(),
+        releaseService.getCharts<ChartData>()
+      ])
 
-        if (statsResponse.data.success && chartResponse.data.success) {
-          setState({
-            stats: statsResponse.data.data!,
-            chartData: chartResponse.data.data!,
-            loading: false,
-            error: null
-          })
-        } else {
-          throw new Error('API 응답 실패')
-        }
-      } catch (err) {
-        console.error('Error loading dashboard data:', err)
-        const errorMessage = axios.isAxiosError(err)
-          ? err.response?.data?.error || err.message
-          : err instanceof Error
-            ? err.message
-            : 'Unknown error'
+      setState({
+        stats,
+        chartData,
+        loading: false,
+        error: null
+      })
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+      const errorMessage = error instanceof Error ? error.message : MESSAGES.ERROR.DEFAULT
 
-        setState({
-          stats: null,
-          chartData: null,
-          loading: false,
-          error: errorMessage
-        })
-      }
+      setState({
+        stats: null,
+        chartData: null,
+        loading: false,
+        error: errorMessage
+      })
     }
-
-    loadDashboardData()
   }, [])
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }))
 
       // 서버 데이터 새로고침 요청
-      await axios.post(`${API_BASE_URL}/releases/refresh`)
+      await releaseService.refresh()
 
       // 새 데이터 로드
-      const [statsResponse, chartResponse] = await Promise.all([
-        axios.get<StatsResponse>(`${API_BASE_URL}/releases/stats`),
-        axios.get<ChartDataResponse>(`${API_BASE_URL}/releases/charts`)
+      const [stats, chartData] = await Promise.all([
+        releaseService.getStats<DashboardStats>(),
+        releaseService.getCharts<ChartData>()
       ])
 
-      if (statsResponse.data.success && chartResponse.data.success) {
-        setState({
-          stats: statsResponse.data.data!,
-          chartData: chartResponse.data.data!,
-          loading: false,
-          error: null
-        })
-      }
-    } catch (err) {
-      console.error('Error refreshing dashboard data:', err)
+      setState({
+        stats,
+        chartData,
+        loading: false,
+        error: null
+      })
+    } catch (error) {
+      console.error('Error refreshing dashboard data:', error)
       setState(prev => ({
         ...prev,
         loading: false,
-        error: '데이터 새로고침에 실패했습니다.'
+        error: MESSAGES.ERROR.REFRESH_FAILED
       }))
     }
-  }
+  }, [])
 
-  return {
-    stats: state.stats,
-    chartData: state.chartData,
-    loading: state.loading,
-    error: state.error,
-    refresh
-  }
+  useEffect(() => {
+    fetchDashboardData()
+  }, [fetchDashboardData])
+
+  // 반환값을 useMemo로 메모화하여 객체 참조 안정성 확보
+  return useMemo(
+    () => ({
+      stats: state.stats,
+      chartData: state.chartData,
+      loading: state.loading,
+      error: state.error,
+      refresh
+    }),
+    [state.stats, state.chartData, state.loading, state.error, refresh]
+  )
 }

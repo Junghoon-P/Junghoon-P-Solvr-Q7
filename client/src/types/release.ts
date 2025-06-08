@@ -26,7 +26,7 @@ export interface ReleaseData {
   'Days Since Epoch': number
 }
 
-export interface ChartData {
+export interface ReleaseChartData {
   name: string
   value?: number
   [key: string]: any

@@ -1,15 +1,20 @@
+import { memo, useMemo } from 'react'
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'
 import { ChartContainer } from './ChartContainer'
 import { CHART_COLORS } from '../../utils/chartUtils'
 import { ReleaseTypeProps } from '../../types/chart'
 
-export const ReleaseTypeDistribution = ({ data }: ReleaseTypeProps) => {
-  // 서버에서 받은 데이터를 차트 형식으로 변환
-  const chartData = data.map(item => ({
-    name: item.type,
-    value: item.count,
-    percentage: item.percentage
-  }))
+export const ReleaseTypeDistribution = memo(({ data }: ReleaseTypeProps) => {
+  // 서버에서 받은 데이터를 차트 형식으로 변환 (메모화)
+  const chartData = useMemo(
+    () =>
+      data.map(item => ({
+        name: item.type,
+        value: item.count,
+        percentage: item.percentage
+      })),
+    [data]
+  )
 
   return (
     <ChartContainer title="릴리즈 타입 분포">
@@ -36,4 +41,6 @@ export const ReleaseTypeDistribution = ({ data }: ReleaseTypeProps) => {
       </PieChart>
     </ChartContainer>
   )
-}
+})
+
+ReleaseTypeDistribution.displayName = 'ReleaseTypeDistribution'
